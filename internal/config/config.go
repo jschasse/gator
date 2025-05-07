@@ -69,4 +69,4 @@ func (c *Config) SetUser(name string) error {
 		return err
 	}
 	return nil
-} 
+}

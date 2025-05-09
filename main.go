@@ -63,6 +63,7 @@ func main() {
 	
 	myCommands.list["login"] = handlerLogin
 	myCommands.list["register"] = handlerRegister
+	myCommands.list["reset"] = handlerReset
 
 	err = myCommands.run(s, co)
 	if err != nil {
@@ -119,8 +120,18 @@ func handlerRegister(s *state, cmd command) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s", user)
+	fmt.Printf("%%+v: %+v\n", user)
 
+	return nil
+}
+
+func handlerReset(s *state, cmd command) error {
+	err := s.db.DeleteUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Users successfully deleted\n")
 	return nil
 }
 

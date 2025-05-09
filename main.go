@@ -64,6 +64,7 @@ func main() {
 	myCommands.list["login"] = handlerLogin
 	myCommands.list["register"] = handlerRegister
 	myCommands.list["reset"] = handlerReset
+	myCommands.list["users"] = handlerUsers
 
 	err = myCommands.run(s, co)
 	if err != nil {
@@ -132,6 +133,28 @@ func handlerReset(s *state, cmd command) error {
 	}
 
 	fmt.Printf("Users successfully deleted\n")
+	return nil
+}
+
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return err
+	}
+
+	s.configPtr, err = config.Read()
+	if err != nil {
+		return err
+	}
+
+	for _, name := range(users) {
+		if name == s.configPtr.Current_user_name {
+			fmt.Printf("%s (current)\n", name)
+			continue
+		}
+		fmt.Printf("%s\n", name)
+	}
+
 	return nil
 }
 

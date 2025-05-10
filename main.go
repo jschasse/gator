@@ -65,6 +65,7 @@ func main() {
 	myCommands.list["register"] = handlerRegister
 	myCommands.list["reset"] = handlerReset
 	myCommands.list["users"] = handlerUsers
+	myCommands.list["agg"] = handlerAgg
 
 	err = myCommands.run(s, co)
 	if err != nil {
@@ -154,6 +155,16 @@ func handlerUsers(s *state, cmd command) error {
 		}
 		fmt.Printf("%s\n", name)
 	}
+
+	return nil
+}
+
+func handlerAgg(s *state, cmd command) error {
+	feed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	fmt.Println(feed)
 
 	return nil
 }

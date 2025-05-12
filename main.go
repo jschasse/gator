@@ -66,10 +66,12 @@ func main() {
 	myCommands.list["reset"] = handlerReset
 	myCommands.list["users"] = handlerUsers
 	myCommands.list["agg"] = handlerAgg
+	myCommands.list["addfeed"] = handlerAddFeed
+	myCommands.list["feeds"] = handlerFeeds
 
 	err = myCommands.run(s, co)
 	if err != nil {
-		fmt.Print(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -165,6 +167,54 @@ func handlerAgg(s *state, cmd command) error {
 		return err
 	}
 	fmt.Println(feed)
+
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.arguments) < 2 {
+		return fmt.Errorf("commands needs name and url\n")
+	}
+	var err error
+
+	s.configPtr, err = config.Read()
+	if err != nil {
+		return err
+	}
+
+	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	params := database.CreateFeedParams{
+		ID:		   uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:	   cmd.arguments[0],
+		Url:	   cmd.arguments[1],
+		UserID:    user.ID,
+	}
+
+	feed, err := s.db.CreateFeed(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(feed)
+
+	return nil
+}
+
+func handlerFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return err
+	}
+
+	for _, feed := range feeds {
+		fmt.Println(feed)
+	}
 
 	return nil
 }

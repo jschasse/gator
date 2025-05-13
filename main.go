@@ -68,6 +68,8 @@ func main() {
 	myCommands.list["agg"] = handlerAgg
 	myCommands.list["addfeed"] = handlerAddFeed
 	myCommands.list["feeds"] = handlerFeeds
+	myCommands.list["follow"] = handlerFollow
+	myCommands.list["following"] = handlerFollowing
 
 	err = myCommands.run(s, co)
 	if err != nil {
@@ -201,6 +203,11 @@ func handlerAddFeed(s *state, cmd command) error {
 		return err
 	}
 
+	newCMD := cmd
+	newCMD.arguments = cmd.arguments[1:]
+
+	err = handlerFollow(s, newCMD)
+
 	fmt.Println(feed)
 
 	return nil
@@ -214,6 +221,64 @@ func handlerFeeds(s *state, cmd command) error {
 
 	for _, feed := range feeds {
 		fmt.Println(feed)
+	}
+
+	return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.arguments) < 1 {
+		return fmt.Errorf("command needs a url\n")
+	}
+
+	var err error
+
+	s.configPtr, err = config.Read()
+	if err != nil {
+		return err
+	}
+
+	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.arguments[0])
+	if err != nil {
+		return err
+	}
+
+	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	params := database.CreateFeedFollowParams{
+		ID:		   uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:	   user.ID,
+		FeedID:    feed.ID,
+	};
+
+	feedFollow, err := s.db.CreateFeedFollow(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("Feed name: %s Current User: %s\n", feedFollow.FeedName, s.configPtr.Current_user_name)
+
+	return nil
+}
+
+func handlerFollowing(s *state, cmd command) error {
+	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
+	if err != nil {
+		return err
+	}
+
+	following, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(following); i++ {
+		fmt.Printf("%s\n", following[i].FeedName)
 	}
 
 	return nil

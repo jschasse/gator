@@ -11,6 +11,7 @@ import(
 	"context"
 	"github.com/google/uuid"
 	"time"
+	"errors"
 )
 
 type state struct {
@@ -25,6 +26,24 @@ type command struct {
 
 type commands struct {
 	list map[string]func(*state, command) error
+}
+
+func middlewareLoggedIn(loggedInHandler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+    return func(s *state, cmd command) error {
+        if s.configPtr == nil || s.configPtr.Current_user_name == "" {
+            return fmt.Errorf("no user is currently logged in. Please login or register first")
+        }
+
+        user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
+        if err != nil {
+            if errors.Is(err, sql.ErrNoRows) {
+                return fmt.Errorf("logged in user '%s' not found in database. Please ensure you are logged in with a valid, registered user", s.configPtr.Current_user_name)
+            }
+            return fmt.Errorf("error fetching logged in user '%s': %w", s.configPtr.Current_user_name, err)
+        }
+
+        return loggedInHandler(s, cmd, user)
+    }
 }
 
 
@@ -66,10 +85,25 @@ func main() {
 	myCommands.list["reset"] = handlerReset
 	myCommands.list["users"] = handlerUsers
 	myCommands.list["agg"] = handlerAgg
-	myCommands.list["addfeed"] = handlerAddFeed
 	myCommands.list["feeds"] = handlerFeeds
-	myCommands.list["follow"] = handlerFollow
-	myCommands.list["following"] = handlerFollowing
+
+	err = myCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
+    if err != nil {
+        fmt.Printf("Error registering addfeed: %v\n", err)
+        os.Exit(1)
+    }
+
+    err = myCommands.register("follow", middlewareLoggedIn(handlerFollow))
+    if err != nil {
+        fmt.Printf("Error registering follow: %v\n", err)
+		os.Exit(1)
+    }
+
+    err = myCommands.register("following", middlewareLoggedIn(handlerFollowing))
+    if err != nil {
+        fmt.Printf("Error registering following: %v\n", err)
+		os.Exit(1)
+    }
 
 	err = myCommands.run(s, co)
 	if err != nil {
@@ -173,21 +207,11 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.arguments) < 2 {
 		return fmt.Errorf("commands needs name and url\n")
 	}
-	var err error
-
-	s.configPtr, err = config.Read()
-	if err != nil {
-		return err
-	}
-
-	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
-	if err != nil {
-		return err
-	}
+	
 
 	params := database.CreateFeedParams{
 		ID:		   uuid.New(),
@@ -206,7 +230,7 @@ func handlerAddFeed(s *state, cmd command) error {
 	newCMD := cmd
 	newCMD.arguments = cmd.arguments[1:]
 
-	err = handlerFollow(s, newCMD)
+	err = handlerFollow(s, newCMD, user)
 
 	fmt.Println(feed)
 
@@ -226,16 +250,9 @@ func handlerFeeds(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.arguments) < 1 {
 		return fmt.Errorf("command needs a url\n")
-	}
-
-	var err error
-
-	s.configPtr, err = config.Read()
-	if err != nil {
-		return err
 	}
 
 	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.arguments[0])
@@ -243,10 +260,6 @@ func handlerFollow(s *state, cmd command) error {
 		return err
 	}
 
-	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
-	if err != nil {
-		return err
-	}
 
 	params := database.CreateFeedFollowParams{
 		ID:		   uuid.New(),
@@ -266,11 +279,7 @@ func handlerFollow(s *state, cmd command) error {
 	return nil
 }
 
-func handlerFollowing(s *state, cmd command) error {
-	user, err := s.db.GetUserByName(context.Background(), s.configPtr.Current_user_name)
-	if err != nil {
-		return err
-	}
+func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	following, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {

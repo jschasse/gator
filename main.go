@@ -105,6 +105,12 @@ func main() {
 		os.Exit(1)
     }
 
+	err = myCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
+    if err != nil {
+        fmt.Printf("Error registering unfollow: %v\n", err)
+		os.Exit(1)
+    }
+
 	err = myCommands.run(s, co)
 	if err != nil {
 		fmt.Println(err)
@@ -288,6 +294,25 @@ func handlerFollowing(s *state, cmd command, user database.User) error {
 
 	for i := 0; i < len(following); i++ {
 		fmt.Printf("%s\n", following[i].FeedName)
+	}
+
+	return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	feed, err := s.db.GetFeedByUrl(context.Background(), cmd.arguments[0])
+	if err != nil {
+		return err
+	}
+
+	params := database.DeleteFeedFollowParams{
+		UserID:	user.ID,
+		FeedID:	feed.ID,
+	}
+
+	_, err = s.db.DeleteFeedFollow(context.Background(), params)
+	if err != nil {
+		return err
 	}
 
 	return nil

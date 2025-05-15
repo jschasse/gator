@@ -1,4 +1,4 @@
-# blogaggregator
+# Gator
 
 Program Requirements
   - GO

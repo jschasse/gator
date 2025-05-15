@@ -16,6 +16,7 @@ Identify your Go bin directory:
 1. If GOBIN is set: echo $GOBIN
 2. If GOPATH is set: echo $GOPATH/bin
 3. Otherwise, it's likely: $HOME/go/bin
+
 Add it to your PATH: Open your shell's configuration file (e.g., ~/.bashrc, ~/.zshrc):
 
 Add the following line at the end (replace /path/to/your/go/bin with the actual path from step 1):

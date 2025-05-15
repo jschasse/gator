@@ -38,6 +38,10 @@ Set your database URL as follows:
 `protocol://username:password@host:port/database`
 Example: `postgres://admin:pw@localhost:5432/gator_db`
 The filename should be `.gatorconfig.json` and located in your home directory
+Inside of your `.gatorconfig.json` should look like:
+> {
+> "db_url": `protocol://username:password@host:port/database`
+> }
 Next, run the `register` command to add your user to the database.
 > The `register` command takes one argument
 > Example: `gator jared`

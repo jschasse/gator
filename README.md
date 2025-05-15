@@ -43,6 +43,6 @@ Inside of your `.gatorconfig.json` should look like:
 > "db_url": `protocol://username:password@host:port/database`
 > }
 Next, run the `register` command to add your user to the database.
-> The `register` command takes one argument
-> Example: `gator jared`
-> this will register your name in the config file and set you as the user of the database.
+>> The `register` command takes one argument
+>> Example: `gator jared`
+>> this will register your name in the config file and set you as the user of the database.

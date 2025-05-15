@@ -32,4 +32,9 @@ Apply the changes: Source the configuration file or open a new terminal window:
 Once the directory containing gator is in your PATH, you can run it from any location by simply typing:
 `gator`
 
+##### Setting up the config file
 
+Set your database URL as follows:
+protocol://username:password@host:port/database
+Example: postgres://admin:pw@localhost:5432/gator_db”
+Next, run the `register` command to add your user to the database.

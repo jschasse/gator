@@ -7,7 +7,7 @@
 
 ### How to Install
 -----------------------------------------
-  After you have Go and PostgreSQL on your system you want to run ```go install github.com/jschasse/gator@latest```. IF you DONT have your **$GOBIN** path set, makesure to set it so that you can use gator from any command line in your system. 
+  After you have Go and PostgreSQL on your system you want to run ```go install github.com/jschasse/gator@latest```. If you DONT have your **$GOBIN** path set, set it so that you can use gator from any command line in your system. 
 
 #### How to add the Go bin directory to your PATH (if not already there):
 

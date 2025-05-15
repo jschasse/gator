@@ -13,16 +13,20 @@
 
 Identify your Go bin directory:
 
-1. If GOBIN is set: echo $GOBIN
-2. If GOPATH is set: echo $GOPATH/bin
-3. Otherwise, it's likely: $HOME/go/bin
+1. If GOBIN is set: `echo $GOBIN`
+2. If GOPATH is set: `echo $GOPATH/bin`
+3. Otherwise, it's likely: `$HOME/go/bin`
 
 Add it to your PATH: Open your shell's configuration file (e.g., ~/.bashrc, ~/.zshrc):
+`nano ~/.bashrc # or ~/.zshrc, etc.`
 
 Add the following line at the end (replace /path/to/your/go/bin with the actual path from step 1):
+`export PATH=$PATH:/path/to/your/go/bin`
 
 For example, if it's $HOME/go/bin:
+`export PATH=$PATH:$HOME/go/bin`
 
 Apply the changes: Source the configuration file or open a new terminal window:
+`source ~/.bashrc # or source ~/.zshrc`
 
 

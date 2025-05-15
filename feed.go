@@ -46,7 +46,7 @@ func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 		return nil, err
 	}
 
-	fmt.Println(data)
+	fmt.Println(string(data))
 
 	feed := &RSSFeed{}
 

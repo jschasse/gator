@@ -6,12 +6,15 @@ import(
 	"fmt"
 	"github.com/jschasse/blogaggregator/internal/config"
 	"github.com/jschasse/blogaggregator/internal/database"
+	"github.com/lib/pq"
 	"database/sql"
 	"os"
 	"context"
 	"github.com/google/uuid"
 	"time"
 	"errors"
+	"strconv"
+	"log"
 )
 
 type state struct {
@@ -87,6 +90,7 @@ func main() {
 	myCommands.list["agg"] = handlerAgg
 	myCommands.list["feeds"] = handlerFeeds
 
+
 	err = myCommands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
     if err != nil {
         fmt.Printf("Error registering addfeed: %v\n", err)
@@ -108,6 +112,12 @@ func main() {
 	err = myCommands.register("unfollow", middlewareLoggedIn(handlerUnfollow))
     if err != nil {
         fmt.Printf("Error registering unfollow: %v\n", err)
+		os.Exit(1)
+    }
+
+	err = myCommands.register("browse", middlewareLoggedIn(handlerBrowse))
+    if err != nil {
+        fmt.Printf("Error registering browse: %v\n", err)
 		os.Exit(1)
     }
 
@@ -269,8 +279,15 @@ func scrapeFeeds(s *state) error {
 		return err
 	}
 
+	log.Println("Found the feed")
+	
+	scrapeFeed(s.db, feed)
 
-	err = s.db.MarkFeedFetched(context.Background(), feed.ID)
+	return nil
+}
+
+func scrapeFeed(db *database.Queries, feed database.Feed) error {
+	err := db.MarkFeedFetched(context.Background(), feed.ID)
 	if err != nil {
 		return err
 	}
@@ -280,11 +297,54 @@ func scrapeFeeds(s *state) error {
 		return err
 	}
 
-	for i := 0; i < len(httpFeed.Channel.Item); i++ {
-		fmt.Printf("%s\n", httpFeed.Channel.Item[i].Title)
+	for _, item := range httpFeed.Channel.Item {
+
+		pubTime, err := parsePublishedDate(item.PubDate)
+		if err != nil {
+			log.Printf("%s", err)
+		}
+
+		params := database.CreatePostParams{
+			ID:			 uuid.New(),
+			CreatedAt:	 time.Now(),
+			UpdatedAt:	 time.Now(),
+			Title:		 sql.NullString{String: item.Title, Valid: item.Title != ""},
+			Url:		 sql.NullString{String: item.Link, Valid: item.Link != ""},
+			Description: sql.NullString{String: item.Description, Valid: item.Description != ""},
+			PublishedAt: sql.NullTime{Time: pubTime, Valid: !pubTime.IsZero()},
+			FeedID:		 feed.ID,
+		}
+
+		_, err = db.CreatePost(context.Background(), params)
+		if err != nil {
+			if pqErr, ok := err.(*pq.Error); ok && pqErr.Code == "23505"{
+				continue
+			}
+			return err
+		}
 	}
 
 	return nil
+}
+
+func parsePublishedDate(dateStr string) (time.Time, error) {
+    formats := []string{
+        time.RFC1123Z, 
+        time.RFC1123,   
+        time.RFC3339,   
+        "2006-01-02T15:04:05-07:00",
+        "2006-01-02 15:04:05",
+    }
+    
+    for _, format := range formats {
+        parsedTime, err := time.Parse(format, dateStr)
+        if err == nil {
+            return parsedTime, nil
+        }
+    }
+    
+
+    return time.Time{}, fmt.Errorf("unable to parse date: %s", dateStr)
 }
 
 func handlerFollow(s *state, cmd command, user database.User) error {
@@ -344,6 +404,36 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 	_, err = s.db.DeleteFeedFollow(context.Background(), params)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	limit := 2
+	if len(cmd.arguments) == 1 {
+		if specifiedLimit, err := strconv.Atoi(cmd.arguments[0]); err == nil {
+			limit = specifiedLimit
+		} else {
+			return fmt.Errorf("invalid limit: %w", err)
+		}
+	}
+
+	posts, err := s.db.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		UserID: user.ID,
+		Limit:  int32(limit),
+	})
+	if err != nil {
+		return fmt.Errorf("couldn't get posts for user: %w", err)
+	}
+
+	fmt.Printf("Found %d posts for user %s:\n", len(posts), user.Name)
+	for _, post := range posts {
+		fmt.Printf("%s\n", post.PublishedAt.Time.Format("Mon Jan 2"))
+		fmt.Printf("--- %s ---\n", post.Title)
+		fmt.Printf("    %v\n", post.Description.String)
+		fmt.Printf("Link: %s\n", post.Url)
+		fmt.Println("=====================================")
 	}
 
 	return nil

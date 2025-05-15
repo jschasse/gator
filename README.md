@@ -29,4 +29,7 @@ For example, if it's $HOME/go/bin:
 Apply the changes: Source the configuration file or open a new terminal window:
 `source ~/.bashrc # or source ~/.zshrc`
 
+Once the directory containing gator is in your PATH, you can run it from any location by simply typing:
+`gator`
+
 

@@ -54,14 +54,14 @@ Once you've setup the config file and registered youre name to the db you can st
 
 Commands avaliable to you:
 
-`register <username>`: Creates a new user account with the given <username>. It also automatically logs you in as this new user.
-`login <username>`: Logs you in as an existing user specified by <username>.
-`users`: Lists all registered users. It will indicate which user is currently logged in.
-`addfeed <feedname> <feedurl>`: Adds a new RSS feed to the system with a custom <feedname> and its <feedurl>. You must be logged in to use this. It also automatically makes the logged-in user follow this new feed.
-`feeds`: Lists all the feeds that have been added to the system.
-`follow <feedurl>`: Allows the logged-in user to start following an existing feed, specified by its <feedurl>.
-`following`: Lists all the feeds that the currently logged-in user is following.
-`unfollow <feedurl>`: Allows the logged-in user to stop following a feed, specified by its <feedurl>.
-`browse [limit]`: Shows the latest posts from the feeds the logged-in user is following. You can optionally specify a [limit] (e.g., browse 5) to control how many posts are displayed (default is 2).
-`agg <duration>`: Starts the aggregator service. It will continuously fetch new posts from all feeds at an interval specified by <duration> (e.g., agg 1h for every hour, agg 30m for every 30 minutes). This command will run indefinitely.
-`reset`: Deletes all users from the database. This is a destructive action.
+1. `register <username>`: Creates a new user account with the given <username>. It also automatically logs you in as this new user.
+2. `login <username>`: Logs you in as an existing user specified by <username>.
+3. `users`: Lists all registered users. It will indicate which user is currently logged in.
+4. `addfeed <feedname> <feedurl>`: Adds a new RSS feed to the system with a custom <feedname> and its <feedurl>. You must be logged in to use this. It also automatically makes the logged-in user follow this new feed.
+5. `feeds`: Lists all the feeds that have been added to the system.
+6. `follow <feedurl>`: Allows the logged-in user to start following an existing feed, specified by its <feedurl>.
+7. `following`: Lists all the feeds that the currently logged-in user is following.
+8. `unfollow <feedurl>`: Allows the logged-in user to stop following a feed, specified by its <feedurl>.
+9. `browse [limit]`: Shows the latest posts from the feeds the logged-in user is following. You can optionally specify a [limit] (e.g., browse 5) to control how many posts are displayed (default is 2).
+10. `agg <duration>`: Starts the aggregator service. It will continuously fetch new posts from all feeds at an interval specified by <duration> (e.g., agg 1h for every hour, agg 30m for every 30 minutes). This command will run indefinitely.
+11. `reset`: Deletes all users from the database. This is a destructive action.
